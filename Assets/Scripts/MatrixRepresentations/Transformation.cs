@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Rendering {
+namespace Rendering.MatrixRepresentations {
 
     /// <summary>
     /// Representation of a transformation which for now really is scoped down to:

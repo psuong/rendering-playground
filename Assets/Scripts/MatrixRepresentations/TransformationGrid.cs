@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Rendering {
+namespace Rendering.MatrixRepresentations {
 
     /// <summary>
     /// The transformation grid is by no means an actual shader, but it allows us to understand how vertices really

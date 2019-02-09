@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Rendering {
+namespace Rendering.MatrixRepresentations {
 
     public class ScaleTransformation : Transformation {
 

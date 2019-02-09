@@ -6,7 +6,7 @@ namespace Rendering {
 
         public float focalLength = 1f;
 
-        // NOTE: Returns an identity matrix.
+        // NOTE: Returns a perspective projection.
         public override Matrix4x4 Matrix {
             get {
                 var matrix = new Matrix4x4();

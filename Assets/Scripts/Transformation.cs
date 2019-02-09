@@ -11,7 +11,7 @@ namespace Rendering {
     public abstract class Transformation : MonoBehaviour {
 
         public abstract Matrix4x4 Matrix { get; }
-        public abstract Vector3 Apply(Vector3 pt);
+        public virtual Vector3 Apply(Vector3 pt) => throw new System.NotImplementedException();
         public Vector3 ApplyTransformation(Vector3 pt) => Matrix.MultiplyPoint(pt);
     }
 }

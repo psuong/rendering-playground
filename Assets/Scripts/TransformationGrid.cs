@@ -71,6 +71,7 @@ namespace Rendering {
 
         private Vector3 TransformPoint(int x, int y, int z) {
             var coordinate = GetCoordinate(x, y, z);
+            // Usually I would use MultiplyPoint3x4, but there are bottom row manipulations
             return transformation.MultiplyPoint(coordinate);
         }
     }

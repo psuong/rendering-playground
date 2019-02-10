@@ -4,12 +4,14 @@
 
 // Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
 
-Shader "Custom/TestShaderWithDetail" {
+Shader "Custom/TestShaderSplatting" {
 
     Properties {
-        _tint("Tint", Color) = (1, 1, 1, 1)
-        _texture("Texture", 2D) = "white" {}
-        _detail_texture("Detail Texture", 2D) = "gray" {}
+        _texture("Splat Map", 2D) = "white" {}
+        [NoScaleOffset] _texture1("Texture 1", 2D) = "white" {}
+        [NoScaleOffset] _texture2("Texture 2", 2D) = "white" {}
+        [NoScaleOffset] _texture3("Texture 1", 2D) = "white" {}
+        [NoScaleOffset] _texture4("Texture 2", 2D) = "white" {}
     }
 
     SubShader {
@@ -19,14 +21,14 @@ Shader "Custom/TestShaderWithDetail" {
             #pragma fragment MyFragmentProgram
             #include "UnityCG.cginc"
 
-            float4 _tint;
-            sampler2D _texture, _detail_texture;
-            float4 _texture_ST, _detail_texture_ST;
+            sampler2D _texture;
+            float4 _texture_ST;
+            sampler2D _texture1, _texture2, _texture3, _texture4;
 
             struct Interpolators {
                 float4 position : SV_POSITION;
                 float2 uv : TEXCOORD0;
-                float2 uvDetail : TEXCOORD1;
+                float2 uvSplat : TEXCOORD1;
             };
 
             struct VertexData {
@@ -34,20 +36,24 @@ Shader "Custom/TestShaderWithDetail" {
                 float2 uv : TEXCOORD0;
             };
 
+            // Output the position of the vertex, where the SV_POSITION stands for SYSTEM VALUE
             Interpolators MyVertexProgram(VertexData v) {
                 Interpolators i;
                 i.position = UnityObjectToClipPos(v.position);
                 i.uv = TRANSFORM_TEX(v.uv, _texture);
-                i.uvDetail = TRANSFORM_TEX(v.uv, _detail_texture);
+                i.uvSplat = v.uv;
                 return i;
             }
 
             // Shader is an opaque shader
             // Vertex Shader -> Fragment Shader
             float4 MyFragmentProgram (Interpolators i) : SV_TARGET {
-                float4 colour = tex2D(_texture, i.uv) * _tint;
-                colour *= tex2D(_texture, i.uv * 10) * 2;
-                return colour;
+                float4 splat = tex2D(_texture, i.uvSplat);
+                return 
+                    tex2D(_texture1, i.uv) * splat.r + 
+                    tex2D(_texture2, i.uv) * splat.g +
+                    tex2D(_texture3, i.uv) * splat.b +
+                    tex2D(_texture4, i.uv) * (1 - splat.r - splat.g - splat.b);
             }
             ENDCG
         }

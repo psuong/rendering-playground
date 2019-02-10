@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: TestMaterial
-  m_Shader: {fileID: 4800000, guid: 47d8d433e97e8a912a44000e8b33cbb3, type: 3}
+  m_Name: TestMaterialWithDetailSampler
+  m_Shader: {fileID: 4800000, guid: 10bdc90394112f19c85c30dcb086e7ab, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -56,13 +56,29 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _detail_texture:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
+        m_Texture: {fileID: 2800000, guid: 83fbc57cff5bb1d35931f569d689f3cd, type: 3}
+        m_Scale: {x: 10, y: 10}
         m_Offset: {x: 0, y: 0}
     - _texture:
+        m_Texture: {fileID: 2800000, guid: b47f0a5ffe0d2fd14b371893f84ecd13, type: 3}
+        m_Scale: {x: 4, y: 4}
+        m_Offset: {x: 0, y: 0}
+    - _texture1:
+        m_Texture: {fileID: 2800000, guid: 314eb541dcda0432494a62770137fe61, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _texture2:
+        m_Texture: {fileID: 2800000, guid: da958bef8cfbcee1bb4c1407ea6cd905, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _texture3:
+        m_Texture: {fileID: 2800000, guid: 83fbc57cff5bb1d35931f569d689f3cd, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _texture4:
         m_Texture: {fileID: 2800000, guid: b048de79881b4474495f4946b6b5141e, type: 3}
         m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - texture:
         m_Texture: {fileID: 2800000, guid: b048de79881b4474495f4946b6b5141e, type: 3}
         m_Scale: {x: 1, y: 1}

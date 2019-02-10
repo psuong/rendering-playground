@@ -66,3 +66,6 @@ crashlytics-build.properties
 
 ### VSCode ###
 *.vscode/
+
+### Jetbrains ###
+Assets/Plugins*

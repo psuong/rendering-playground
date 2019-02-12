@@ -21,11 +21,15 @@ Shader "Custom/TestShaderWithLighting" {
                 "LightMode" = "ForwardBase"
             }
 
+            // The minimal target level for PBR is 3.0 shaderlab
+
             CGPROGRAM
+            #pragma target 3.0
             #pragma vertex MyVertexProgram
             #pragma fragment MyFragmentProgram
-            #include "UnityStandardBRDF.cginc"
-            #include "UnityStandardUtils.cginc"
+
+            // Already includes the StandardBRDF and StandardUtils
+            #include "UnityPBSLighting.cginc"
 
             float4 _tint;
             sampler2D _texture;
@@ -82,13 +86,29 @@ Shader "Custom/TestShaderWithLighting" {
                 // Instead use the standard function which computes the albedo via Diffuse and Metallic properties
                 albedo = DiffuseAndSpecularFromMetallic(albedo, _metallic, specularTint, oneMinusReflectivity);
 
-                float3 diffuse = albedo * lightColour * DotClamped(lightDir, i.normal);
-
-                float3 halfVector = normalize(lightDir + viewDir);
-
+                // float3 diffuse = albedo * lightColour * DotClamped(lightDir, i.normal);
+                // float3 halfVector = normalize(lightDir + viewDir);
                 // If we don't use a metallic property, use the _specular_tint property
-                float3 specular = specularTint * lightColour * pow(DotClamped(halfVector, i.normal), _smoothness * 100);
-                return float4(diffuse + specular, 1);
+                // float3 specular = specularTint * lightColour * pow(DotClamped(halfVector, i.normal), _smoothness * 100);
+                // return float4(diffuse + specular, 1);
+
+                UnityLight light;
+                light.color = lightColour;
+                light.dir = lightDir;
+				light.ndotl = DotClamped(i.normal, lightDir);
+
+                // Setting these to black for the time being...
+				UnityIndirect indirectLight;
+				indirectLight.diffuse = 0;
+				indirectLight.specular = 0;
+
+                // Use PBR instead!
+                return UNITY_BRDF_PBS(
+                    albedo, specularTint,
+                    oneMinusReflectivity, _smoothness,
+                    i.normal, viewDir,
+                    light, indirectLight
+                );
             }
             ENDCG
         }

@@ -9,7 +9,9 @@ Shader "Custom/TestShaderWithLighting" {
     Properties {
         _tint("Tint", Color) = (1, 1, 1, 1)
         _texture("Albedo", 2D) = "white" {}
-        _specular_tint("Specular", Color ) = (0.5, 0.5, 0.5, 0.5)
+        // Single values are not computed correctly in gamma space
+        [Gamma] _metallic("Metallic", Range(0, 1)) = 0.1
+        // _specular_tint("Specular", Color ) = (0.5, 0.5, 0.5, 0.5)
         _smoothness("Smoothness", Range(0,1)) = 0.5
     }
 
@@ -28,7 +30,7 @@ Shader "Custom/TestShaderWithLighting" {
             float4 _tint;
             sampler2D _texture;
             float4 _texture_ST, _specular_tint;
-            float _smoothness;
+            float _smoothness, _metallic;
 
             struct Interpolators {
                 float4 position : SV_POSITION;
@@ -70,13 +72,22 @@ Shader "Custom/TestShaderWithLighting" {
                 // Monochrome, use the strongest specular colour to reduce the albedo
                 // albedo *= max(_specular_tint.r, max(_specular_tint.g, _specular_tint.b));
 
-                float oneMinusReflectivity;
-                albedo = EnergyConservationBetweenDiffuseAndSpecular(albedo, _specular_tint.rgb, oneMinusReflectivity);
+                float3 specularTint = albedo * _metallic;
+                float oneMinusReflectivity = 1 - _metallic;
+                // If we don't use a metallic property
+                // albedo = EnergyConservationBetweenDiffuseAndSpecular(albedo, _specular_tint.rgb, oneMinusReflectivity);
+                // Below is oversimplified and won't work in most cases...
+                // albedo *= oneMinusReflectivity;
+
+                // Instead use the standard function which computes the albedo via Diffuse and Metallic properties
+                albedo = DiffuseAndSpecularFromMetallic(albedo, _metallic, specularTint, oneMinusReflectivity);
 
                 float3 diffuse = albedo * lightColour * DotClamped(lightDir, i.normal);
 
                 float3 halfVector = normalize(lightDir + viewDir);
-                float3 specular = _specular_tint.rgb * lightColour * pow(DotClamped(halfVector, i.normal), _smoothness * 100);
+
+                // If we don't use a metallic property, use the _specular_tint property
+                float3 specular = specularTint * lightColour * pow(DotClamped(halfVector, i.normal), _smoothness * 100);
                 return float4(diffuse + specular, 1);
             }
             ENDCG

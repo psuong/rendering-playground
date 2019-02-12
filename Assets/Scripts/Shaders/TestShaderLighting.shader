@@ -23,6 +23,7 @@ Shader "Custom/TestShaderWithLighting" {
             #pragma vertex MyVertexProgram
             #pragma fragment MyFragmentProgram
             #include "UnityStandardBRDF.cginc"
+            #include "UnityStandardUtils.cginc"
 
             float4 _tint;
             sampler2D _texture;
@@ -63,12 +64,20 @@ Shader "Custom/TestShaderWithLighting" {
                 float3 viewDir = normalize(_WorldSpaceCameraPos - i.worldPos);
                 float3 lightColour = _LightColor0.rgb;
                 float3 albedo = tex2D(_texture, i.uv).rgb * _tint.rgb;
+                // Reduce the strength of the specularity
+                // albedo *= 1 - _specular_tint.rgb;
+                
+                // Monochrome, use the strongest specular colour to reduce the albedo
+                // albedo *= max(_specular_tint.r, max(_specular_tint.g, _specular_tint.b));
+
+                float oneMinusReflectivity;
+                albedo = EnergyConservationBetweenDiffuseAndSpecular(albedo, _specular_tint.rgb, oneMinusReflectivity);
+
                 float3 diffuse = albedo * lightColour * DotClamped(lightDir, i.normal);
 
                 float3 halfVector = normalize(lightDir + viewDir);
                 float3 specular = _specular_tint.rgb * lightColour * pow(DotClamped(halfVector, i.normal), _smoothness * 100);
-                // float3 reflectionDir = reflect(-lightDir, i.normal);
-                return float4(specular, 1);
+                return float4(diffuse + specular, 1);
             }
             ENDCG
         }

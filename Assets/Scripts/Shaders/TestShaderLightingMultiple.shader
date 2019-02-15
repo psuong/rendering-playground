@@ -22,5 +22,22 @@
 
             ENDCG
         }
+
+        Pass {
+            Tags {
+                "LightMode" = "ForwardAdd"
+            }
+
+            Blend One One
+            ZWrite Off // We don't need to write to the ZBuffer twice for the second light, so disable it.
+            CGPROGRAM
+
+            #pragma target 3.0
+            #pragma vertex MyVertexProgram
+            #pragma fragment MyFragmentProgram
+            #include "LightingBase.cginc"
+
+            ENDCG
+        }
     }
 }

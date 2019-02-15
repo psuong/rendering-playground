@@ -32,15 +32,21 @@ Interpolators MyVertexProgram(VertexData v) {
     return i;
 }
 
+UnityLight CreateLight (Interpolators i) {
+	UnityLight light;
+	light.dir = normalize(_WorldSpaceLightPos0.xyz - i.worldPos);
+	light.color = _LightColor0.rgb;
+	light.ndotl = DotClamped(i.normal, light.dir);
+	return light;
+}
+
 // Shader is an opaque shader
 // Vertex Shader -> Fragment Shader
 float4 MyFragmentProgram (Interpolators i) : SV_TARGET {
     i.normal = normalize(i.normal);
     // What does saturate do?
     // Clamps between 0 and 1
-    float3 lightDir = _WorldSpaceLightPos0.xyz;
     float3 viewDir = normalize(_WorldSpaceCameraPos - i.worldPos);
-    float3 lightColour = _LightColor0.rgb;
     float3 albedo = tex2D(_texture, i.uv).rgb * _tint.rgb;
 
     float3 specularTint = albedo * _metallic;
@@ -48,11 +54,6 @@ float4 MyFragmentProgram (Interpolators i) : SV_TARGET {
 
     // Instead use the standard function which computes the albedo via Diffuse and Metallic properties
     albedo = DiffuseAndSpecularFromMetallic(albedo, _metallic, specularTint, oneMinusReflectivity);
-
-    UnityLight light;
-    light.color = lightColour;
-    light.dir = lightDir;
-    light.ndotl = DotClamped(i.normal, lightDir);
 
     // Setting these to black for the time being...
     UnityIndirect indirectLight;
@@ -64,6 +65,6 @@ float4 MyFragmentProgram (Interpolators i) : SV_TARGET {
         albedo, specularTint,
         oneMinusReflectivity, _smoothness,
         i.normal, viewDir,
-        light, indirectLight
+        CreateLight(i), indirectLight
     );
 }

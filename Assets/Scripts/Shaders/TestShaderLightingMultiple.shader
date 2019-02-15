@@ -35,6 +35,7 @@
             #pragma target 3.0
             #pragma vertex MyVertexProgram
             #pragma fragment MyFragmentProgram
+            #define POINT
             #include "LightingBase.cginc"
 
             ENDCG

@@ -35,7 +35,16 @@ Interpolators MyVertexProgram(VertexData v) {
 UnityLight CreateLight (Interpolators i) {
 	UnityLight light;
 	light.dir = normalize(_WorldSpaceLightPos0.xyz - i.worldPos);
-	light.color = _LightColor0.rgb;
+
+    // Adding light attenuation is the gradual loss of light fluxuations. Directional light have miniscule light
+    // attenuation that it's barely noticable, but point lights tend to have a stronger attenuation factor, so the
+    // further you are away from light, the more dim it is.
+    float3 lightVec = _WorldSpaceLightPos0.xyz - i.worldPos;
+
+    // As the denominator goes towards zero, the value gets closer to infinity so add a 1.
+	float attenuation = 1 / (1 + dot(lightVec, lightVec));
+
+	light.color = _LightColor0.rgb * attenuation;
 	light.ndotl = DotClamped(i.normal, light.dir);
 	return light;
 }

@@ -1,11 +1,10 @@
 ﻿Shader "Custom/TestShaderLightingMultiple" {
 
     Properties {
-        _tint("Tint", Color) = (1, 1, 1, 1)
-        _texture("Albedo", 2D) = "white" {}
-        // Single values are not computed correctly in gamma space
-        [Gamma] _metallic("Metallic", Range(0, 1)) = 0.1
-        _smoothness("Smoothness", Range(0,1)) = 0.5
+        _Tint ("Tint", Color) = (1, 1, 1, 1)
+        _MainTex ("Albedo", 2D) = "white" {}
+        [Gamma] _Metallic ("Metallic", Range(0, 1)) = 0
+        _Mmoothness ("Smoothness", Range(0,1)) = 0.1
     }
 
     SubShader {

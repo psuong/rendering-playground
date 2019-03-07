@@ -1,36 +1,38 @@
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
 #if !defined(MY_LIGHTING_INCLUDED)
 #define MY_LIGHTING_INCLUDED
+
 #include "AutoLight.cginc"
 #include "UnityPBSLighting.cginc"
-#endif
 
-float4 _tint;
-sampler2D _texture;
-float4 _texture_ST, _specular_tint;
-float _smoothness, _metallic;
+float4 _Tint;
+sampler2D _MainTex;
+float4 _MainTex_ST;
 
-struct Interpolators {
-    float4 position : SV_POSITION;
-    float2 uv : TEXCOORD0;
-    float3 normal : TEXCOORD1;
-    float4 worldPos : TEXCOORD2;
-};
+float _Metallic;
+float _Smoothness;
 
 struct VertexData {
-    float4 position : POSITION;
-    float3 normal : NORMAL;
-    float2 uv : TEXCOORD0;
+	float4 position : POSITION;
+	float3 normal : NORMAL;
+	float2 uv : TEXCOORD0;
 };
 
-// Output the position of the vertex, where the SV_POSITION stands for SYSTEM VALUE
-Interpolators MyVertexProgram(VertexData v) {
-    Interpolators i;
-    i.position = UnityObjectToClipPos(v.position);
-    i.worldPos = mul(unity_ObjectToWorld, v.position);
-    i.normal = mul(transpose((float3x3)unity_ObjectToWorld), float4(v.normal, 0));
-    i.normal = UnityObjectToWorldNormal(v.normal);
-    i.uv = TRANSFORM_TEX(v.uv, _texture);
-    return i;
+struct Interpolators {
+	float4 position : SV_POSITION;
+	float2 uv : TEXCOORD0;
+	float3 normal : TEXCOORD1;
+	float3 worldPos : TEXCOORD2;
+};
+
+Interpolators MyVertexProgram (VertexData v) {
+	Interpolators i;
+	i.position = UnityObjectToClipPos(v.position);
+	i.worldPos = mul(unity_ObjectToWorld, v.position);
+	i.normal = UnityObjectToWorldNormal(v.normal);
+	i.uv = TRANSFORM_TEX(v.uv, _MainTex);
+	return i;
 }
 
 UnityLight CreateLight (Interpolators i) {
@@ -42,31 +44,29 @@ UnityLight CreateLight (Interpolators i) {
 	return light;
 }
 
-// Shader is an opaque shader
-// Vertex Shader -> Fragment Shader
 float4 MyFragmentProgram (Interpolators i) : SV_TARGET {
-    i.normal = normalize(i.normal);
-    // What does saturate do?
-    // Clamps between 0 and 1
-    float3 viewDir = normalize(_WorldSpaceCameraPos - i.worldPos);
-    float3 albedo = tex2D(_texture, i.uv).rgb * _tint.rgb;
+	i.normal = normalize(i.normal);
 
-    float3 specularTint = albedo * _metallic;
-    float oneMinusReflectivity = 1 - _metallic;
+	float3 viewDir = normalize(_WorldSpaceCameraPos - i.worldPos);
 
-    // Instead use the standard function which computes the albedo via Diffuse and Metallic properties
-    albedo = DiffuseAndSpecularFromMetallic(albedo, _metallic, specularTint, oneMinusReflectivity);
+	float3 albedo = tex2D(_MainTex, i.uv).rgb * _Tint.rgb;
 
-    // Setting these to black for the time being...
-    UnityIndirect indirectLight;
-    indirectLight.diffuse = 0;
-    indirectLight.specular = 0;
+	float3 specularTint;
+	float oneMinusReflectivity;
+	albedo = DiffuseAndSpecularFromMetallic(
+		albedo, _Metallic, specularTint, oneMinusReflectivity
+	);
 
-    // Use PBR instead!
-    return UNITY_BRDF_PBS(
-        albedo, specularTint,
-        oneMinusReflectivity, _smoothness,
-        i.normal, viewDir,
-        CreateLight(i), indirectLight
-    );
+	UnityIndirect indirectLight;
+	indirectLight.diffuse = 0;
+	indirectLight.specular = 0;
+
+	return UNITY_BRDF_PBS(
+		albedo, specularTint,
+		oneMinusReflectivity, _Smoothness,
+		i.normal, viewDir,
+		CreateLight(i), indirectLight
+	);
 }
+
+#endif

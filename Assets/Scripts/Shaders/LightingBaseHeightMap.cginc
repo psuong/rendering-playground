@@ -9,9 +9,12 @@
 float4 _Tint;
 sampler2D _MainTex;
 float4 _MainTex_ST;
-float4 _HeightMap_TexelSize;
 
-sampler2D _HeightMap;
+// We use the Normal Map instead of a height map.
+// float4 _HeightMap_TexelSize;
+// sampler2D _HeightMap;
+
+sampler2D _NormalMap;
 
 float _Metallic;
 float _Smoothness;
@@ -87,21 +90,27 @@ Interpolators MyVertexProgram (VertexData v) {
 }
 
 void InitializeFragmentNormal(inout Interpolators i) {
+	// We can ignore the following and use the normals instead.
 	// Get the central linear difference since that's a more accurate normal that is biased in both directions,
 	// not just 1 direction.
-	float2 du = float2(_HeightMap_TexelSize.x * 0.5, 0);
-	float u1 = tex2D(_HeightMap, i.uv - du);
-	float u2 = tex2D(_HeightMap, i.uv + du);
-	float3 tu = float3(1, u2 - u1, 0);
+	// float2 du = float2(_HeightMap_TexelSize.x * 0.5, 0);
+	// float u1 = tex2D(_HeightMap, i.uv - du);
+	// float u2 = tex2D(_HeightMap, i.uv + du);
+	// float3 tu = float3(1, u2 - u1, 0);
 
-	float2 dv = float2(0, _HeightMap_TexelSize.y * 0.5);
-	float v1 = tex2D(_HeightMap, i.uv - dv);
-	float v2 = tex2D(_HeightMap, i.uv + dv);
-	float3 tv = float3(0, v2 - v1, 1);
+	// float2 dv = float2(0, _HeightMap_TexelSize.y * 0.5);
+	// float v1 = tex2D(_HeightMap, i.uv - dv);
+	// float v2 = tex2D(_HeightMap, i.uv + dv);
+	// float3 tv = float3(0, v2 - v1, 1);
 
 	// i.normal = cross(tv, tu);
 	// Construct the vector directly instead of using the cross product
-	i.normal = float3(u1 - u2, 1, v1 - v2);
+	// i.normal = float3(u1 - u2, 1, v1 - v2);
+	i.normal.xy = tex2D(_NormalMap, i.uv).wy * 2 - 1;
+
+	// saturate clamps between 0 and 1
+	i.normal.z = sqrt(1 - saturate(dot(i.normal.xy, i.normal.xy)));
+	i.normal = i.normal.xzy;
 	i.normal = normalize(i.normal);
 }
 

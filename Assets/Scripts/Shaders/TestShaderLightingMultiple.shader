@@ -4,7 +4,7 @@
         _Tint ("Tint", Color) = (1, 1, 1, 1)
         _MainTex ("Albedo", 2D) = "white" {}
         [Gamma] _Metallic ("Metallic", Range(0, 1)) = 0
-        _Mmoothness ("Smoothness", Range(0,1)) = 0.1
+        _Smoothness ("Smoothness", Range(0,1)) = 0.1
     }
 
     SubShader {

@@ -18,6 +18,7 @@ sampler2D _NormalMap;
 
 float _Metallic;
 float _Smoothness;
+float _BumpScale;
 
 struct VertexData {
 	float4 position : POSITION;
@@ -47,7 +48,7 @@ void ComputeVertexLightColor(inout Interpolators i) {
 	#endif
 }
 
-UnityLight CreateLight (Interpolators i) {
+UnityLight CreateLight(Interpolators i) {
 	UnityLight light;
 	light.dir = normalize(_WorldSpaceLightPos0.xyz - i.worldPos);
 
@@ -106,10 +107,14 @@ void InitializeFragmentNormal(inout Interpolators i) {
 	// i.normal = cross(tv, tu);
 	// Construct the vector directly instead of using the cross product
 	// i.normal = float3(u1 - u2, 1, v1 - v2);
-	i.normal.xy = tex2D(_NormalMap, i.uv).wy * 2 - 1;
 
+	// There's support for unpacking normals within Unity so let's use that instead...
+	// i.normal.xy = tex2D(_NormalMap, i.uv).wy * 2 - 1;
+	// i.normal.xy *= _BumpScale;
 	// saturate clamps between 0 and 1
-	i.normal.z = sqrt(1 - saturate(dot(i.normal.xy, i.normal.xy)));
+	// i.normal.z = sqrt(1 - saturate(dot(i.normal.xy, i.normal.xy)));
+
+	i.normal = UnpackScaleNormal(tex2D(_NormalMap, i.uv), _BumpScale);
 	i.normal = i.normal.xzy;
 	i.normal = normalize(i.normal);
 }

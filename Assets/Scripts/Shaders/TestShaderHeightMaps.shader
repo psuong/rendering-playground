@@ -12,6 +12,12 @@
         _DetailBumpScale ("Detail Bump Scale", Float) = 1
     }
 
+	CGINCLUDE
+
+	#define BINORMAL_PER_FRAGMENT
+
+	ENDCG
+
     SubShader {
         Pass {
             Tags {

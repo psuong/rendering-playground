@@ -23,6 +23,7 @@ float _BumpScale, _DetailBumpScale;
 struct VertexData {
 	float4 position : POSITION;
 	float3 normal : NORMAL;
+	float4 tangent : TANGENT;
 	float2 uv : TEXCOORD0;
 };
 
@@ -30,10 +31,11 @@ struct Interpolators {
 	float4 position : SV_POSITION;
 	float4 uv : TEXCOORD0;
 	float3 normal : TEXCOORD1;
-	float3 worldPos : TEXCOORD2;
+	float4 tangent : TEXCOORD2;
+	float3 worldPos : TEXCOORD3;
 
 	#if defined(VERTEXLIGHT_ON)
-		float3 vertexLightColor : TEXCOORD3;
+		float3 vertexLightColor : TEXCOORD4;
 	#endif
 };
 
@@ -80,11 +82,25 @@ UnityIndirect CreateIndirectLight (Interpolators i) {
 	return indirectLight;
 }
 
+float3 CreateBinormal (float3 normal, float3 tangent, float binormalSign) {
+	return cross(normal, tangent.xyz) *
+		(binormalSign * unity_WorldTransformParams.w);
+}
+
 Interpolators MyVertexProgram (VertexData v) {
 	Interpolators i;
 	i.position = UnityObjectToClipPos(v.position);
 	i.worldPos = mul(unity_ObjectToWorld, v.position);
 	i.normal = UnityObjectToWorldNormal(v.normal);
+
+	#if defined(BINORMAL_PER_FRAGMENT)
+		i.tangent = float4(UnityObjectToWorldDir(v.tangent.xyz), v.tangent.w);
+	#else
+		i.tangent = UnityObjectToWorldDir(v.tangent.xyz);
+		i.binormal = CreateBinormal(i.normal, i.tangent, v.tangent.w);
+	#endif
+
+	i.tangent = float4(UnityObjectToWorldDir(v.tangent.xyz), v.tangent.w);
 	i.uv.xy = TRANSFORM_TEX(v.uv, _MainTex);
 	i.uv.zw = TRANSFORM_TEX(v.uv, _DetailTex);
 	ComputeVertexLightColor(i);
@@ -92,41 +108,21 @@ Interpolators MyVertexProgram (VertexData v) {
 }
 
 void InitializeFragmentNormal(inout Interpolators i) {
-	// We can ignore the following and use the normals instead.
-	// Get the central linear difference since that's a more accurate normal that is biased in both directions,
-	// not just 1 direction.
-	// float2 du = float2(_HeightMap_TexelSize.x * 0.5, 0);
-	// float u1 = tex2D(_HeightMap, i.uv - du);
-	// float u2 = tex2D(_HeightMap, i.uv + du);
-	// float3 tu = float3(1, u2 - u1, 0);
-
-	// float2 dv = float2(0, _HeightMap_TexelSize.y * 0.5);
-	// float v1 = tex2D(_HeightMap, i.uv - dv);
-	// float v2 = tex2D(_HeightMap, i.uv + dv);
-	// float3 tv = float3(0, v2 - v1, 1);
-
-	// i.normal = cross(tv, tu);
-	// Construct the vector directly instead of using the cross product
-	// i.normal = float3(u1 - u2, 1, v1 - v2);
-
-	// There's support for unpacking normals within Unity so let's use that instead...
-	// i.normal.xy = tex2D(_NormalMap, i.uv).wy * 2 - 1;
-	// i.normal.xy *= _BumpScale;
-	// saturate clamps between 0 and 1
-	// i.normal.z = sqrt(1 - saturate(dot(i.normal.xy, i.normal.xy)));
-
 	float3 mainNormal = UnpackScaleNormal(tex2D(_NormalMap, i.uv.xy), _BumpScale);
 	float3 detailedNormal = UnpackScaleNormal(tex2D(_DetailNormalMap, i.uv.zw), _DetailBumpScale);
+	float3 tangentSpaceNormal = BlendNormals(mainNormal, detailedNormal);
 
-	// Average the normals out but honestly it wouldn't exactly work.
-	// i.normal = float3(mainNormal.xy / mainNormal.z + mainNormal.xy / detailedNormal.z, 1);
-	// i.normal = i.normal.xzy;
-	// i.normal = normalize(i.normal);
+	#if defined(BINORMAL_PER_FRAGMENT)
+		float3 binormal = CreateBinormal(i.normal, i.tangent.xyz, i.tangent.w);
+	#else
+		float3 binormal = i.binormal;
+	#endif
 
-	// Use the blend normals instead
-
-	i.normal = BlendNormals(mainNormal, detailedNormal);
-	i.normal = i.normal.xzy;
+	i.normal = normalize(
+		tangentSpaceNormal.x * i.tangent +
+		tangentSpaceNormal.y * binormal +
+		tangentSpaceNormal.z * i.normal
+	);
 }
 
 float4 MyFragmentProgram (Interpolators i) : SV_TARGET {

@@ -119,9 +119,14 @@ void InitializeFragmentNormal(inout Interpolators i) {
 	float3 detailedNormal = UnpackScaleNormal(tex2D(_DetailNormalMap, i.uv.zw), _DetailBumpScale);
 
 	// Average the normals out but honestly it wouldn't exactly work.
-	i.normal = (mainNormal + detailedNormal) * 0.5;
+	// i.normal = float3(mainNormal.xy / mainNormal.z + mainNormal.xy / detailedNormal.z, 1);
+	// i.normal = i.normal.xzy;
+	// i.normal = normalize(i.normal);
+
+	// Use the blend normals instead
+
+	i.normal = BlendNormals(mainNormal, detailedNormal);
 	i.normal = i.normal.xzy;
-	i.normal = normalize(i.normal);
 }
 
 float4 MyFragmentProgram (Interpolators i) : SV_TARGET {

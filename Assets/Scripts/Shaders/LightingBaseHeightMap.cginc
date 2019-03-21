@@ -60,7 +60,12 @@ UnityLight CreateLight(Interpolators i) {
 		light.dir = _WorldSpaceLightPos0.xyz;
 	#endif
 
-	UNITY_LIGHT_ATTENUATION(attenuation, 0, i.worldPos);
+	#if defined(SHADOWS_SCREEN)
+		float attenuation = 1;
+	#else
+		UNITY_LIGHT_ATTENUATION(attenuation, 0, i.worldPos);
+	#endif
+
 	light.color = _LightColor0.rgb * attenuation;
 	light.ndotl = DotClamped(i.normal, light.dir);
 	return light;
